@@ -1,13 +1,26 @@
 {
   "name": "explore-run-npm",
+  "displayName": "Explore Run NPM",
   "version": "1.0.0",
+  "publisher": "your-publisher-id",
   "description": "Run npm scripts from the VS Code Explorer context menu.",
   "main": "./extension.js",
+  "files": [
+    "extension.js",
+    "README.md",
+    "LICENSE"
+  ],
   "engines": {
     "vscode": "^1.85.0"
   },
   "categories": [
     "Other"
+  ],
+  "keywords": [
+    "npm",
+    "scripts",
+    "explorer",
+    "context menu"
   ],
   "activationEvents": [
     "onCommand:exploreRunNpm.runScript"
@@ -31,9 +44,13 @@
   },
   "scripts": {
     "lint": "echo \"No lint configured\"",
+    "package": "vsce package",
+    "publish": "vsce publish",
     "test": "node --check extension.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "author": "Tim",
+  "license": "ISC",
+  "devDependencies": {
+    "@vscode/vsce": "^3.9.1"
+  }
 }
