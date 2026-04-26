@@ -1,9 +1,13 @@
 {
   "name": "explore-run-npm",
-  "displayName": "Explore Run NPM",
+  "displayName": "Run NPM from Explorer Context Menu",
   "version": "1.0.0",
   "publisher": "landz",
   "description": "Run npm scripts from the VS Code Explorer context menu.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/codeh2o/vscode-plugin-explore-run-npm.git"
+  },
   "main": "./extension.js",
   "icon": "images/icon.png",
   "files": [
