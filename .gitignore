@@ -1,3 +1,5 @@
 node_modules/
+.venv/
 *.vsix
 .DS_Store
+images/logo-chroma.png
