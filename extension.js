@@ -42,7 +42,13 @@ function activate(context) {
         return;
       }
 
-      runScript(packageJsonPath, selected.scriptName);
+      const packageManager = await pickPackageManager(packageJsonPath, packageJson);
+
+      if (!packageManager) {
+        return;
+      }
+
+      runScript(packageJsonPath, selected.scriptName, packageManager);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       vscode.window.showErrorMessage(`Unable to run npm script: ${message}`);
@@ -147,18 +153,123 @@ async function readPackageJson(packageJsonPath) {
 
 /**
  * @param {string} packageJsonPath
- * @param {string} scriptName
+ * @param {Record<string, unknown>} packageJson
+ * @returns {Promise<'npm' | 'pnpm' | 'yarn' | 'bun' | undefined>}
  */
-function runScript(packageJsonPath, scriptName) {
+async function pickPackageManager(packageJsonPath, packageJson) {
+  const packageManagers = await detectPackageManagers(packageJsonPath, packageJson);
+
+  if (packageManagers.length === 1) {
+    return packageManagers[0];
+  }
+
+  const selected = await vscode.window.showQuickPick(
+    packageManagers.map((name) => ({
+      label: name,
+      description: name === 'npm' ? 'Always available fallback' : `Detected ${name} project`,
+      packageManager: name,
+    })),
+    {
+      title: 'Select package manager',
+      placeHolder: 'Choose how to run this npm script',
+    }
+  );
+
+  return selected?.packageManager;
+}
+
+/**
+ * @param {string} packageJsonPath
+ * @param {Record<string, unknown>} packageJson
+ * @returns {Promise<Array<'npm' | 'pnpm' | 'yarn' | 'bun'>>}
+ */
+async function detectPackageManagers(packageJsonPath, packageJson) {
+  const packageDirectory = path.dirname(packageJsonPath);
+  const detected = [];
+  const packageManager = detectPackageManagerFromField(packageJson.packageManager);
+
+  if (packageManager) {
+    detected.push(packageManager);
+  }
+
+  const lockfileManagers = [
+    ['pnpm-lock.yaml', 'pnpm'],
+    ['yarn.lock', 'yarn'],
+    ['bun.lockb', 'bun'],
+    ['bun.lock', 'bun'],
+    ['package-lock.json', 'npm'],
+  ];
+
+  for (const [lockfile, name] of lockfileManagers) {
+    if (await exists(path.join(packageDirectory, lockfile))) {
+      detected.push(name);
+    }
+  }
+
+  detected.push('npm');
+
+  return uniquePackageManagers(detected);
+}
+
+/**
+ * @param {unknown} value
+ * @returns {'npm' | 'pnpm' | 'yarn' | 'bun' | undefined}
+ */
+function detectPackageManagerFromField(value) {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+
+  const name = value.split('@')[0];
+
+  if (name === 'npm' || name === 'pnpm' || name === 'yarn' || name === 'bun') {
+    return name;
+  }
+
+  return undefined;
+}
+
+/**
+ * @param {string[]} packageManagers
+ * @returns {Array<'npm' | 'pnpm' | 'yarn' | 'bun'>}
+ */
+function uniquePackageManagers(packageManagers) {
+  const supported = new Set(['npm', 'pnpm', 'yarn', 'bun']);
+  const unique = [];
+
+  for (const packageManager of packageManagers) {
+    if (supported.has(packageManager) && !unique.includes(packageManager)) {
+      unique.push(packageManager);
+    }
+  }
+
+  return unique;
+}
+
+/**
+ * @param {string} packageJsonPath
+ * @param {string} scriptName
+ * @param {'npm' | 'pnpm' | 'yarn' | 'bun'} packageManager
+ */
+function runScript(packageJsonPath, scriptName, packageManager) {
   const workingDirectory = path.dirname(packageJsonPath);
-  const terminalName = `npm: ${scriptName}`;
+  const terminalName = `${packageManager}: ${scriptName}`;
   const terminal = vscode.window.createTerminal({
     name: terminalName,
     cwd: workingDirectory,
   });
 
   terminal.show();
-  terminal.sendText(`npm run ${quoteShellArg(scriptName)}`);
+  terminal.sendText(buildRunCommand(packageManager, scriptName));
+}
+
+/**
+ * @param {'npm' | 'pnpm' | 'yarn' | 'bun'} packageManager
+ * @param {string} scriptName
+ * @returns {string}
+ */
+function buildRunCommand(packageManager, scriptName) {
+  return `${packageManager} run ${quoteShellArg(scriptName)}`;
 }
 
 /**

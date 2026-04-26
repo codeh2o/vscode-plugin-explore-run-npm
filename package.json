@@ -2,11 +2,13 @@
   "name": "explore-run-npm",
   "displayName": "Explore Run NPM",
   "version": "1.0.0",
-  "publisher": "your-publisher-id",
+  "publisher": "landz",
   "description": "Run npm scripts from the VS Code Explorer context menu.",
   "main": "./extension.js",
+  "icon": "images/icon.png",
   "files": [
     "extension.js",
+    "images/icon.png",
     "README.md",
     "LICENSE"
   ],
