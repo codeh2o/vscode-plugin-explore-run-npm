@@ -2,6 +2,10 @@
 
 Run npm scripts directly from the VS Code Explorer context menu.
 
+## Screenshot
+
+![Run NPM Script from the Explorer context menu](snapshot.png)
+
 ## Features
 
 - Right-click a file, folder, or `package.json` in the Explorer and choose **Run NPM Script**.

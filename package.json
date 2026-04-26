@@ -13,6 +13,7 @@
   "files": [
     "extension.js",
     "images/icon.png",
+    "snapshot.png",
     "README.md",
     "LICENSE"
   ],
